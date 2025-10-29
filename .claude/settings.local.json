@@ -16,7 +16,15 @@
       "mcp__vercel__web_fetch_vercel_url",
       "Bash(claude mcp list)",
       "Bash(claude mcp inspect:*)",
-      "Bash(vercel storage create:*)"
+      "Bash(vercel storage create:*)",
+      "mcp__vercel__list_projects",
+      "mcp__vercel__get_project",
+      "mcp__vercel__search_vercel_documentation",
+      "Bash(vercel storage --help:*)",
+      "Bash(vercel --help:*)",
+      "Bash(vercel env pull:*)",
+      "Bash(cat:*)",
+      "Bash(npm run init-db:*)"
     ],
     "deny": [],
     "ask": []

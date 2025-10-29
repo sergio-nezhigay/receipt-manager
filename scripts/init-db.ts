@@ -1,4 +1,9 @@
+import { config } from 'dotenv';
 import { sql } from '@vercel/postgres';
+import { resolve } from 'path';
+
+// Load environment variables from .env.local
+config({ path: resolve(process.cwd(), '.env.local') });
 
 async function initDatabase() {
   try {
