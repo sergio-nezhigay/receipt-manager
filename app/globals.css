@@ -12,9 +12,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 1rem 0;
 }
 
 /* Mobile first styles */
@@ -29,7 +27,7 @@ body {
   padding: 1.5rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0 auto 1.5rem;
 }
 
 h1 {
@@ -72,6 +70,210 @@ p {
   border-bottom: none;
 }
 
+/* Transactions Section */
+.transactions-section {
+  margin-top: 1.5rem;
+}
+
+.transactions-section h2 {
+  color: #333;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.transactions-section h3 {
+  color: #555;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Balance Display */
+.balance-display {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.balance-label {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.balance-amount {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.balance-amount.negative {
+  color: #ffcccc;
+}
+
+/* Transaction Form */
+.transaction-form {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.transaction-form input,
+.transaction-form select {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.transaction-form input:focus,
+.transaction-form select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.form-row input,
+.form-row select {
+  flex: 1;
+}
+
+.transaction-form button {
+  width: 100%;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.transaction-form button:hover {
+  transform: translateY(-2px);
+}
+
+.transaction-form button:active {
+  transform: translateY(0);
+}
+
+/* Transactions List */
+.transactions-list {
+  margin-top: 1.5rem;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.transaction-item {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  border-left: 4px solid #ddd;
+}
+
+.transaction-item.credit {
+  border-left-color: #28a745;
+}
+
+.transaction-item.debit {
+  border-left-color: #dc3545;
+}
+
+.transaction-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.transaction-info {
+  flex: 1;
+}
+
+.transaction-info strong {
+  display: block;
+  color: #333;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.transaction-category {
+  display: inline-block;
+  background: #e0e0e0;
+  color: #666;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+.transaction-amount {
+  text-align: right;
+}
+
+.transaction-amount .amount {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.transaction-amount .amount.credit {
+  color: #28a745;
+}
+
+.transaction-amount .amount.debit {
+  color: #dc3545;
+}
+
+.transaction-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.transaction-date {
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+}
+
 /* Tablet and up */
 @media (min-width: 768px) {
   .container {
@@ -80,6 +282,7 @@ p {
 
   .content {
     padding: 2.5rem;
+    margin-bottom: 2rem;
   }
 
   h1 {
@@ -92,5 +295,25 @@ p {
 
   .info {
     padding: 1.5rem;
+  }
+
+  .transactions-section h2 {
+    font-size: 1.75rem;
+  }
+
+  .balance-display {
+    padding: 1.5rem;
+  }
+
+  .balance-amount {
+    font-size: 2rem;
+  }
+
+  .transaction-form {
+    padding: 1.5rem;
+  }
+
+  .transaction-item {
+    padding: 1.25rem;
   }
 }
