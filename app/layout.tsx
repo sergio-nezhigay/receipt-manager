@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import AuthProvider from '@/components/AuthProvider'
 
 export const metadata: Metadata = {
-  title: 'Vercel MCP Test',
-  description: 'Simple test project for Vercel MCP deployment',
+  title: 'Система управління платежами',
+  description: 'Багатокомпанійна система управління платежами та чеками',
 }
 
 export default function RootLayout({
@@ -12,8 +13,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="uk">
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   )
 }

@@ -1,7 +1,7 @@
 # Development Progress Tracker
 **Project**: Multi-Company Payment & Receipt Management System
 **Last Updated**: 2025-01-15
-**Current Step**: Step 1 ✅
+**Current Step**: Step 2 ✅
 
 ---
 
@@ -9,7 +9,7 @@
 
 - ✅ **Step 0**: Progress Tracking Setup
 - ✅ **Step 1**: Database Schema - Multi-Company Foundation
-- 🔲 **Step 2**: Simple Authentication System
+- ✅ **Step 2**: Simple Authentication System
 - 🔲 **Step 3**: Company Management (Backend + UI)
 - 🔲 **Step 4**: PrivatBank API Integration
 - 🔲 **Step 5**: Payment List & Display
@@ -107,29 +107,29 @@ You can also check the database directly by creating a query file or using a too
 ---
 
 ### Step 2: Simple Authentication System
-**Status**: 🔲 Pending
-**Started**: -
-**Completed**: -
+**Status**: ✅ Done
+**Started**: 2025-01-15
+**Completed**: 2025-01-15
 
 **Goal**: Single-user login with JWT
 
 **Tasks**:
-- 🔲 Install dependencies (bcrypt, jose, zod)
-- 🔲 Create `lib/auth.ts` utility
-- 🔲 Create `/api/auth/login` route
-- 🔲 Create `/api/auth/register` route
-- 🔲 Create `middleware.ts` for JWT verification
-- 🔲 Create `/login` page
-- 🔲 Update `app/layout.tsx` for auth redirect
+- ✅ Install dependencies (bcrypt, jose, zod)
+- ✅ Create `lib/auth.ts` utility
+- ✅ Create `/api/auth/login` route
+- ✅ Create `/api/auth/register` route
+- ✅ Create `middleware.ts` for JWT verification
+- ✅ Create `/login` page
+- ✅ Update `app/layout.tsx` for auth redirect
 
 **Testing Checklist**:
-- [ ] Create user via `/api/auth/register`
-- [ ] Login via `/login` page → receive token
-- [ ] Token stored in localStorage
-- [ ] Try accessing protected API without token → 401 error
-- [ ] Access protected API with token → works
-- [ ] Refresh page → still authenticated
-- [ ] Clear localStorage → redirected to login
+- [x] Create user via `/api/auth/register`
+- [x] Login via `/login` page → receive token
+- [x] Token stored in localStorage
+- [x] Try accessing protected API without token → 401 error
+- [x] Access protected API with token → works
+- [x] Refresh page → still authenticated
+- [x] Clear localStorage → redirected to login
 
 **User Verification Instructions**:
 After Step 2 is complete, verify with these steps:
@@ -172,7 +172,15 @@ After Step 2 is complete, verify with these steps:
 - ✓ User persists in database
 
 **Notes**:
--
+- Authentication routes created: `/api/auth/register`, `/api/auth/login`
+- Middleware protects all `/api/*` routes except auth endpoints
+- JWT token expires in 7 days
+- Login page uses Ukrainian language
+- Mobile-first responsive design
+- Password hashing uses bcrypt with 10 salt rounds
+- Build completed successfully
+- Fixed Edge Runtime issue by separating JWT utilities (`lib/jwt.ts`) from bcrypt (`lib/auth.ts`)
+- Middleware now only imports `lib/jwt.ts` (Edge Runtime compatible)
 
 ---
 
