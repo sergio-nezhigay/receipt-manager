@@ -27,7 +27,9 @@
       "Bash(npm run init-db:*)",
       "WebFetch(domain:docs.google.com)",
       "WebFetch(domain:wiki.checkbox.ua)",
-      "Bash(npm run verify-step1:*)"
+      "Bash(npm run verify-step1:*)",
+      "Bash(.env.local)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

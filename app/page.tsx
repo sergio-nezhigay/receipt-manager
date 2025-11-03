@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useCompany } from '@/contexts/CompanyContext'
 
 interface Transaction {
   id: number;
@@ -13,9 +15,13 @@ interface Transaction {
 }
 
 export default function Home() {
+  const router = useRouter();
+  const { selectedCompany, companies, setSelectedCompany, isLoading: companiesLoading } = useCompany();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [balance, setBalance] = useState<string>('0.00');
   const [loading, setLoading] = useState(true);
+  const [fetchingPayments, setFetchingPayments] = useState(false);
+  const [fetchStatus, setFetchStatus] = useState<string>('');
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
@@ -111,8 +117,163 @@ export default function Home() {
     }
   };
 
+  const handleFetchPayments = async () => {
+    if (!selectedCompany) {
+      setFetchStatus('Будь ласка, оберіть компанію');
+      return;
+    }
+
+    setFetchingPayments(true);
+    setFetchStatus('');
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      console.log(`Fetching payments for company: ${selectedCompany.name}`);
+
+      const response = await fetch('/api/integrations/privatbank/fetch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          companyId: selectedCompany.id,
+          // Default to last 30 days
+          // You can add date pickers later to customize this
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const summary = data.summary;
+        setFetchStatus(
+          `Успішно! Отримано: ${summary.total_fetched}, нових платежів: ${summary.new_payments}, дублікатів: ${summary.duplicates}`
+        );
+        console.log('Fetch summary:', summary);
+
+        // Refresh transactions list if any new payments were added
+        if (summary.new_payments > 0) {
+          fetchTransactions();
+        }
+      } else {
+        setFetchStatus(`Помилка: ${data.error || data.message || 'Не вдалося завантажити платежі'}`);
+        console.error('Fetch payments error:', data);
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      setFetchStatus('Помилка з\'єднання з сервером');
+    } finally {
+      setFetchingPayments(false);
+    }
+  };
+
   return (
     <main className="container">
+      {/* Company Selector Header */}
+      <div className="content" style={{ marginBottom: '20px', background: 'rgba(255,255,255,0.95)', borderRadius: '10px', padding: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+          <div style={{ flex: 1, minWidth: '250px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#333' }}>
+              Обрана компанія:
+            </label>
+            {companiesLoading ? (
+              <p style={{ color: '#666' }}>Завантаження компаній...</p>
+            ) : companies.length === 0 ? (
+              <p style={{ color: '#666' }}>
+                Немає доданих компаній.{' '}
+                <a href="/settings" style={{ color: '#667eea', textDecoration: 'underline' }}>
+                  Додайте першу компанію
+                </a>
+              </p>
+            ) : (
+              <select
+                value={selectedCompany?.id || ''}
+                onChange={(e) => {
+                  const company = companies.find(c => c.id === parseInt(e.target.value));
+                  setSelectedCompany(company || null);
+                }}
+                style={{
+                  padding: '10px',
+                  borderRadius: '5px',
+                  border: '1px solid #ddd',
+                  fontSize: '16px',
+                  width: '100%',
+                  maxWidth: '400px',
+                }}
+              >
+                <option value="">Виберіть компанію</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name} (ЄДРПОУ: {company.tax_id})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          <button
+            onClick={() => router.push('/settings')}
+            style={{
+              padding: '10px 20px',
+              background: '#667eea',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            ⚙️ Налаштування
+          </button>
+        </div>
+        {selectedCompany && (
+          <div style={{ marginTop: '10px', padding: '10px', background: '#f0f9ff', borderRadius: '5px' }}>
+            <p style={{ margin: 0, fontSize: '14px', color: '#0369a1' }}>
+              <strong>Активна компанія:</strong> {selectedCompany.name}
+            </p>
+          </div>
+        )}
+
+        {selectedCompany && (
+          <div style={{ marginTop: '15px', borderTop: '1px solid #e5e7eb', paddingTop: '15px' }}>
+            <button
+              onClick={handleFetchPayments}
+              disabled={fetchingPayments}
+              style={{
+                padding: '12px 24px',
+                background: fetchingPayments ? '#9ca3af' : '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: fetchingPayments ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+              }}
+            >
+              {fetchingPayments ? '⏳ Завантаження...' : '💳 Отримати платежі з ПриватБанку'}
+            </button>
+            {fetchStatus && (
+              <div style={{
+                marginTop: '10px',
+                padding: '10px',
+                background: fetchStatus.includes('Помилка') ? '#fee' : '#efe',
+                color: fetchStatus.includes('Помилка') ? '#c33' : '#3c3',
+                borderRadius: '5px',
+                fontSize: '14px',
+              }}>
+                {fetchStatus}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="content">
         <h1>Hello Vercel MCP!</h1>
         <p>This is a simple test project deployed via Vercel MCP.</p>
