@@ -8,7 +8,8 @@
     "start": "next start",
     "init-db": "tsx scripts/init-db.ts",
     "verify-step1": "tsx scripts/verify-step1.ts",
-    "cleanup-companies": "tsx scripts/cleanup-companies.ts"
+    "cleanup-companies": "tsx scripts/cleanup-companies.ts",
+    "migrate-payments": "tsx scripts/add-payment-fields.ts"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",

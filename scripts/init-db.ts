@@ -61,6 +61,8 @@ async function initDatabase() {
         description TEXT,
         sender_account VARCHAR(50),
         sender_name VARCHAR(255),
+        sender_tax_id VARCHAR(50),
+        document_number VARCHAR(100),
         payment_date TIMESTAMP NOT NULL,
         status VARCHAR(20) DEFAULT 'pending',
         receipt_issued BOOLEAN DEFAULT false,

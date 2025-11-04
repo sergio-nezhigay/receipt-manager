@@ -30,7 +30,8 @@
       "Bash(npm run verify-step1:*)",
       "Bash(.env.local)",
       "WebFetch(domain:github.com)",
-      "Bash(npm run cleanup-companies:*)"
+      "Bash(npm run cleanup-companies:*)",
+      "Bash(npm run migrate-payments:*)"
     ],
     "deny": [],
     "ask": []

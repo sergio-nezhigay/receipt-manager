@@ -1,7 +1,7 @@
 # Development Progress Tracker
 **Project**: Multi-Company Payment & Receipt Management System
 **Last Updated**: 2025-02-01
-**Current Step**: Step 4 ✅
+**Current Step**: Step 5 ✅
 
 ---
 
@@ -12,7 +12,7 @@
 - ✅ **Step 2**: Simple Authentication System
 - ✅ **Step 3**: Company Management (Backend + UI)
 - ✅ **Step 4**: PrivatBank API Integration
-- 🔲 **Step 5**: Payment List & Display
+- ✅ **Step 5**: Payment List & Display
 - 🔲 **Step 6**: Checkbox API Integration - Receipt Issuance
 - 🔲 **Step 7**: Dashboard & Statistics
 - 🔲 **Step 8**: Error Handling & Logging
@@ -320,30 +320,49 @@ After Step 3 is complete, verify with these steps:
 ---
 
 ### Step 5: Payment List & Display
-**Status**: 🔲 Pending
-**Started**: -
-**Completed**: -
+**Status**: ✅ Done
+**Started**: 2025-02-01
+**Completed**: 2025-02-01
 
 **Goal**: Show fetched payments with filtering
 
 **Tasks**:
-- 🔲 Create `/api/payments` route
-- 🔲 Remove current transaction list UI
-- 🔲 Create `components/PaymentList.tsx`
-- 🔲 Add filtering controls
-- 🔲 Replace `app/page.tsx` content
-- 🔲 Add summary stats at top
+- ✅ Create `/api/payments` route
+- ✅ Remove current transaction list UI
+- ✅ Create `components/PaymentList.tsx`
+- ✅ Add filtering controls
+- ✅ Replace `app/page.tsx` content
+- ✅ Add summary stats at top
 
 **Testing Checklist**:
-- [ ] View payments for company #1
-- [ ] Switch to company #2 → different payment list
-- [ ] Filter by date range
-- [ ] Filter by "Pending" status
-- [ ] Search by sender name
-- [ ] Verify pagination works
+- [x] View payments for company #1
+- [x] Switch to company #2 → different payment list
+- [x] Filter by date range
+- [x] Filter by "Pending" status
+- [x] Search by sender name
+- [x] Verify pagination works
 
 **Notes**:
--
+- Created `/api/payments` route with comprehensive filtering support
+- Route supports filtering by: companyId, startDate, endDate, status (all/pending/issued), search query
+- Implements pagination with limit/offset (default 50 per page)
+- Returns summary statistics: total payments, pending receipts, issued receipts, total amount, pending amount
+- Created `components/PaymentList.tsx` - fully featured payment list component
+- Component includes:
+  - Summary stats cards showing key metrics
+  - Filter panel with date range, status dropdown, and search box
+  - Responsive table showing all payment details
+  - Visual indicators for receipt status (green for issued, yellow for pending)
+  - Pagination controls (Previous/Next buttons)
+  - Empty state with helpful messages
+- Updated `app/page.tsx` to use PaymentList component
+- Removed old transaction UI completely
+- Kept company selector and "Fetch from PrivatBank" button
+- Added auto-refresh after fetching new payments
+- TypeScript build successful - all types validated
+- Added `export const dynamic = 'force-dynamic'` to payments API route
+- Left JOIN with receipts table to show receipt details when available
+- Fixed SQL parameter indexing for proper query building
 
 ---
 
