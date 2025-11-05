@@ -10,6 +10,7 @@ const createCompanySchema = z.object({
   pb_merchant_id: z.string().optional(),
   pb_api_token: z.string().optional(),
   checkbox_license_key: z.string().optional(),
+  checkbox_cashier_login: z.string().optional(),
   checkbox_cashier_pin: z.string().optional(),
 });
 
@@ -24,6 +25,7 @@ export async function GET() {
         pb_merchant_id,
         pb_api_token_encrypted,
         checkbox_license_key_encrypted,
+        checkbox_cashier_login,
         checkbox_cashier_pin_encrypted,
         created_at
       FROM companies
@@ -50,6 +52,7 @@ export async function GET() {
         pb_merchant_id: company.pb_merchant_id,
         pb_api_token: safeDecrypt(company.pb_api_token_encrypted),
         checkbox_license_key: safeDecrypt(company.checkbox_license_key_encrypted),
+        checkbox_cashier_login: company.checkbox_cashier_login,
         checkbox_cashier_pin: safeDecrypt(company.checkbox_cashier_pin_encrypted),
         created_at: company.created_at,
       };
@@ -92,6 +95,7 @@ export async function POST(request: NextRequest) {
         pb_merchant_id,
         pb_api_token_encrypted,
         checkbox_license_key_encrypted,
+        checkbox_cashier_login,
         checkbox_cashier_pin_encrypted
       )
       VALUES (
@@ -100,6 +104,7 @@ export async function POST(request: NextRequest) {
         ${validatedData.pb_merchant_id || null},
         ${pbTokenEncrypted},
         ${checkboxLicenseEncrypted},
+        ${validatedData.checkbox_cashier_login || null},
         ${checkboxPinEncrypted}
       )
       RETURNING
@@ -107,6 +112,7 @@ export async function POST(request: NextRequest) {
         name,
         tax_id,
         pb_merchant_id,
+        checkbox_cashier_login,
         created_at
     `;
 
@@ -118,6 +124,7 @@ export async function POST(request: NextRequest) {
         ...company,
         pb_api_token: validatedData.pb_api_token || null,
         checkbox_license_key: validatedData.checkbox_license_key || null,
+        checkbox_cashier_login: validatedData.checkbox_cashier_login || null,
         checkbox_cashier_pin: validatedData.checkbox_cashier_pin || null,
       },
     }, { status: 201 });

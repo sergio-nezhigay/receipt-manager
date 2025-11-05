@@ -10,6 +10,7 @@ const updateCompanySchema = z.object({
   pb_merchant_id: z.string().optional().nullable(),
   pb_api_token: z.string().optional().nullable(),
   checkbox_license_key: z.string().optional().nullable(),
+  checkbox_cashier_login: z.string().optional().nullable(),
   checkbox_cashier_pin: z.string().optional().nullable(),
 });
 
@@ -29,6 +30,7 @@ export async function GET(
         pb_merchant_id,
         pb_api_token_encrypted,
         checkbox_license_key_encrypted,
+        checkbox_cashier_login,
         checkbox_cashier_pin_encrypted,
         created_at
       FROM companies
@@ -63,6 +65,7 @@ export async function GET(
       pb_merchant_id: company.pb_merchant_id,
       pb_api_token: safeDecrypt(company.pb_api_token_encrypted),
       checkbox_license_key: safeDecrypt(company.checkbox_license_key_encrypted),
+      checkbox_cashier_login: company.checkbox_cashier_login,
       checkbox_cashier_pin: safeDecrypt(company.checkbox_cashier_pin_encrypted),
       created_at: company.created_at,
     };
@@ -124,6 +127,12 @@ export async function PUT(
       paramIndex++;
     }
 
+    if (validatedData.checkbox_cashier_login !== undefined) {
+      updates.push(`checkbox_cashier_login = $${paramIndex}`);
+      values.push(validatedData.checkbox_cashier_login);
+      paramIndex++;
+    }
+
     if (validatedData.checkbox_cashier_pin !== undefined) {
       updates.push(`checkbox_cashier_pin_encrypted = $${paramIndex}`);
       values.push(validatedData.checkbox_cashier_pin ? encrypt(validatedData.checkbox_cashier_pin) : null);
@@ -169,6 +178,7 @@ export async function PUT(
         ...company,
         pb_api_token: validatedData.pb_api_token || null,
         checkbox_license_key: validatedData.checkbox_license_key || null,
+        checkbox_cashier_login: validatedData.checkbox_cashier_login || null,
         checkbox_cashier_pin: validatedData.checkbox_cashier_pin || null,
       },
     });

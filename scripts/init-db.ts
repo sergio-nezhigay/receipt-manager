@@ -44,6 +44,7 @@ async function initDatabase() {
         pb_merchant_id TEXT,
         pb_api_token_encrypted TEXT,
         checkbox_license_key_encrypted TEXT,
+        checkbox_cashier_login VARCHAR(255),
         checkbox_cashier_pin_encrypted TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       );
@@ -79,10 +80,12 @@ async function initDatabase() {
         company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
         payment_id INTEGER REFERENCES payments(id) ON DELETE SET NULL,
         checkbox_receipt_id VARCHAR(255),
-        fiscal_number VARCHAR(100),
-        amount DECIMAL(10, 2) NOT NULL,
+        fiscal_code VARCHAR(100),
+        amount DECIMAL(10, 2),
+        receipt_url TEXT,
         pdf_url TEXT,
         status VARCHAR(20) DEFAULT 'issued',
+        issued_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW()
       );
     `;

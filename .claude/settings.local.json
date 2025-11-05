@@ -31,7 +31,8 @@
       "Bash(.env.local)",
       "WebFetch(domain:github.com)",
       "Bash(npm run cleanup-companies:*)",
-      "Bash(npm run migrate-payments:*)"
+      "Bash(npm run migrate-payments:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []

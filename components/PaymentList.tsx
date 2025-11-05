@@ -33,6 +33,7 @@ export default function PaymentList({ companyId }: PaymentListProps) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [issuingReceipt, setIssuingReceipt] = useState<number | null>(null);
 
   // Filters
   const [startDate, setStartDate] = useState('');
@@ -130,6 +131,49 @@ export default function PaymentList({ companyId }: PaymentListProps) {
 
   const formatAmount = (amount: string, currency: string) => {
     return `${parseFloat(amount).toFixed(2)} ${currency}`;
+  };
+
+  const handleIssueReceipt = async (paymentId: number) => {
+    try {
+      setIssuingReceipt(paymentId);
+      setError(null);
+
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      console.log(`Issuing receipt for payment ${paymentId}...`);
+
+      const response = await fetch('/api/receipts/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ paymentId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to issue receipt');
+      }
+
+      console.log('Receipt issued successfully:', data);
+      alert(`Чек успішно видано!\nФіскальний код: ${data.receipt.fiscal_code || 'N/A'}`);
+
+      // Refresh payments list
+      await fetchPayments();
+    } catch (err) {
+      console.error('Error issuing receipt:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Не вдалося видати чек';
+      setError(errorMessage);
+      alert(`Помилка: ${errorMessage}`);
+    } finally {
+      setIssuingReceipt(null);
+    }
   };
 
   return (
@@ -356,6 +400,7 @@ export default function PaymentList({ companyId }: PaymentListProps) {
                   <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600' }}>Опис</th>
                   <th style={{ padding: '12px', textAlign: 'right', fontSize: '14px', fontWeight: '600' }}>Сума</th>
                   <th style={{ padding: '12px', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>Статус</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '14px', fontWeight: '600' }}>Дія</th>
                 </tr>
               </thead>
               <tbody>
@@ -426,6 +471,46 @@ export default function PaymentList({ companyId }: PaymentListProps) {
                         }}>
                           ⏳ Очікує
                         </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                      {payment.receipt_issued ? (
+                        <div style={{ fontSize: '12px', color: '#666' }}>
+                          {payment.pdf_url ? (
+                            <a
+                              href={payment.pdf_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                color: '#667eea',
+                                textDecoration: 'none',
+                                fontWeight: '500',
+                              }}
+                            >
+                              📄 PDF
+                            </a>
+                          ) : (
+                            <span style={{ color: '#999' }}>—</span>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleIssueReceipt(payment.id)}
+                          disabled={issuingReceipt === payment.id}
+                          style={{
+                            padding: '6px 12px',
+                            background: issuingReceipt === payment.id ? '#9ca3af' : '#10b981',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: issuingReceipt === payment.id ? 'not-allowed' : 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {issuingReceipt === payment.id ? '⏳ Створення...' : '✓ Видати чек'}
+                        </button>
                       )}
                     </td>
                   </tr>

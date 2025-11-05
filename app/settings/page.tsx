@@ -10,6 +10,7 @@ interface CompanyFormData {
   pb_merchant_id: string;
   pb_api_token: string;
   checkbox_license_key: string;
+  checkbox_cashier_login: string;
   checkbox_cashier_pin: string;
 }
 
@@ -24,6 +25,7 @@ export default function SettingsPage() {
     pb_merchant_id: '',
     pb_api_token: '',
     checkbox_license_key: '',
+    checkbox_cashier_login: '',
     checkbox_cashier_pin: '',
   });
   const [error, setError] = useState('');
@@ -37,6 +39,7 @@ export default function SettingsPage() {
       pb_merchant_id: '',
       pb_api_token: '',
       checkbox_license_key: '',
+      checkbox_cashier_login: '',
       checkbox_cashier_pin: '',
     });
     setEditingId(null);
@@ -51,6 +54,7 @@ export default function SettingsPage() {
       pb_merchant_id: company.pb_merchant_id || '',
       pb_api_token: company.pb_api_token || '',
       checkbox_license_key: company.checkbox_license_key || '',
+      checkbox_cashier_login: company.checkbox_cashier_login || '',
       checkbox_cashier_pin: company.checkbox_cashier_pin || '',
     });
     setEditingId(company.id);
@@ -319,6 +323,25 @@ export default function SettingsPage() {
               />
             </div>
 
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Checkbox Cashier Login
+              </label>
+              <input
+                type="text"
+                value={formData.checkbox_cashier_login}
+                onChange={(e) => setFormData({ ...formData, checkbox_cashier_login: e.target.value })}
+                placeholder="sergey-nezhyhai"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '5px',
+                  border: '1px solid #ddd',
+                  fontSize: '16px',
+                }}
+              />
+            </div>
+
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 Checkbox Cashier PIN
@@ -327,6 +350,7 @@ export default function SettingsPage() {
                 type="password"
                 value={formData.checkbox_cashier_pin}
                 onChange={(e) => setFormData({ ...formData, checkbox_cashier_pin: e.target.value })}
+                placeholder="Password for Checkbox login"
                 style={{
                   width: '100%',
                   padding: '10px',

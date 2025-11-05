@@ -1,7 +1,7 @@
 # Development Progress Tracker
 **Project**: Multi-Company Payment & Receipt Management System
-**Last Updated**: 2025-02-01
-**Current Step**: Step 5 ✅
+**Last Updated**: 2025-11-05
+**Current Step**: Step 6 🔄
 
 ---
 
@@ -13,7 +13,7 @@
 - ✅ **Step 3**: Company Management (Backend + UI)
 - ✅ **Step 4**: PrivatBank API Integration
 - ✅ **Step 5**: Payment List & Display
-- 🔲 **Step 6**: Checkbox API Integration - Receipt Issuance
+- 🔄 **Step 6**: Checkbox API Integration - Receipt Issuance
 - 🔲 **Step 7**: Dashboard & Statistics
 - 🔲 **Step 8**: Error Handling & Logging
 - 🔲 **Step 9**: Security Hardening
@@ -367,18 +367,18 @@ After Step 3 is complete, verify with these steps:
 ---
 
 ### Step 6: Checkbox API Integration - Receipt Issuance
-**Status**: 🔲 Pending
-**Started**: -
+**Status**: 🔄 In Progress
+**Started**: 2025-11-05
 **Completed**: -
 
 **Goal**: Issue fiscal receipts via Checkbox API
 
 **Tasks**:
-- 🔲 Research Checkbox API documentation
-- 🔲 Create `lib/checkbox-client.ts`
-- 🔲 Create `/api/receipts/create` route
-- 🔲 Wire up "Issue Receipt" button
-- 🔲 Create receipt details modal
+- ✅ Research Checkbox API documentation
+- ✅ Create `lib/checkbox-client.ts`
+- ✅ Create `/api/receipts/create` route
+- ✅ Wire up "Issue Receipt" button
+- ✅ Add PDF link display for issued receipts
 
 **Testing Checklist**:
 - [ ] Click "Issue Receipt" on pending payment
@@ -390,7 +390,34 @@ After Step 3 is complete, verify with these steps:
 - [ ] Switch to company #2 → issue receipt
 
 **Notes**:
--
+- Updated Checkbox API integration based on real Postman examples
+- Checkbox API uses two different domains:
+  - Authentication & Shifts: https://api.checkbox.ua/api/v1
+  - Receipt creation: https://api.checkbox.in.ua/api/v1 (note the .in.ua domain)
+- Created `lib/checkbox-client.ts` with complete API client:
+  - `checkboxSignIn()` - Authenticate and get access token
+  - `checkboxOpenShift()` - Open new cashier shift (required before receipts)
+  - `checkboxGetShift()` - Check current shift status
+  - `checkboxCreateReceipt()` - Create fiscal receipt
+  - `checkboxIssueReceipt()` - Full workflow helper function
+- Amounts are handled in kopiyky (1 UAH = 100 kopiyky)
+- Quantities are in milliliters/milligrams (1000 = 1 unit)
+- Created `/api/receipts/create` route:
+  - Validates payment exists and receipt not already issued
+  - Decrypts Checkbox credentials from company settings
+  - Automatically ensures shift is open before creating receipt
+  - Stores receipt details in database with fiscal code and PDF URL
+  - Updates payment record to mark receipt as issued
+- Updated `PaymentList.tsx` component:
+  - Added "Дія" (Action) column to payment table
+  - "Видати чек" (Issue Receipt) button for pending payments
+  - Button shows loading state during receipt creation
+  - PDF link displayed for issued receipts
+  - Auto-refreshes payment list after successful receipt creation
+  - Success/error messages in Ukrainian
+- TypeScript build successful - all types validated
+- Receipt workflow: Sign in → Ensure shift open → Create receipt → Save to database
+- Security: All sensitive credentials encrypted in database
 
 ---
 
