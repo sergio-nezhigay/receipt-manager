@@ -112,7 +112,7 @@ export async function checkboxSignIn(
     const response = await fetch(`${CHECKBOX_API_BASE}/cashier/signin`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
       },
       body: JSON.stringify({
         login,
@@ -150,7 +150,7 @@ export async function checkboxOpenShift(
       headers: {
         'X-License-Key': licenseKey,
         'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
       },
     });
 
@@ -222,7 +222,7 @@ export async function checkboxCreateReceipt(
       headers: {
         'X-License-Key': licenseKey,
         'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
       },
       body: JSON.stringify(receiptData),
     });

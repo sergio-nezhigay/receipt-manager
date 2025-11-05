@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
         p.receipt_id,
         p.created_at,
         r.checkbox_receipt_id,
-        r.fiscal_number,
+        r.fiscal_code,
         r.pdf_url
       FROM payments p
       LEFT JOIN receipts r ON p.receipt_id = r.id

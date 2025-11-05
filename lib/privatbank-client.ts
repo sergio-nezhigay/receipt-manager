@@ -8,7 +8,11 @@
  * 1. Go to "Privat24 for business" → "Accounting and Reports" → "Integration (AutoClient)"
  * 2. Click "Activate Application" → "Integration Module"
  * 3. Get your Merchant ID and API Token
+ *
+ * Note: PrivatBank API returns data in Windows-1251 encoding, so we need to convert it to UTF-8
  */
+
+import * as iconv from 'iconv-lite';
 
 // Base API URL - Update this with the actual PrivatBank API endpoint
 const PRIVATBANK_API_BASE_URL = 'https://acp.privatbank.ua/api';
@@ -111,16 +115,25 @@ export async function fetchPrivatBankPayments(
         'startDate': startDateStr,
         'endDate': endDateStr,
         'limit': '100',
+        'Accept': 'application/json',
+        'Accept-Charset': 'utf-8',
       },
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorBuffer = await response.arrayBuffer();
+      const errorText = iconv.decode(Buffer.from(errorBuffer), 'win1251');
       console.error('PrivatBank API error:', response.status, errorText);
       throw new Error(`PrivatBank API error: ${response.status} ${response.statusText}`);
     }
 
-    const data: PrivatBankStatementResponse = await response.json();
+    // PrivatBank returns data in Windows-1251 encoding, we need to convert it to UTF-8
+    const buffer = await response.arrayBuffer();
+    const decodedText = iconv.decode(Buffer.from(buffer), 'win1251');
+
+    console.log('Decoded response (first 500 chars):', decodedText.substring(0, 500));
+
+    const data: PrivatBankStatementResponse = JSON.parse(decodedText);
 
     console.log(`PrivatBank API response status: ${data.status}`);
     console.log(`PrivatBank API response: ${data.transactions?.length || 0} transactions`);
