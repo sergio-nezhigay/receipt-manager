@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 import { encrypt, decrypt } from '@/lib/encryption';
+import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/api-error-handler';
 
 // Validation schema for creating a company
 const createCompanySchema = z.object({
@@ -16,7 +18,12 @@ const createCompanySchema = z.object({
 
 // GET /api/companies - List all companies
 export async function GET() {
+  const context = { method: 'GET', path: '/api/companies' };
+
   try {
+    logger.apiRequest(context.method, context.path);
+
+    logger.dbQuery('SELECT all companies');
     const result = await sql`
       SELECT
         id,
@@ -40,7 +47,7 @@ export async function GET() {
         try {
           return decrypt(encrypted);
         } catch (error) {
-          console.error(`Decryption failed for company ${company.id}:`, error);
+          logger.error(`Decryption failed for company ${company.id}`, error);
           return null;
         }
       };
@@ -58,23 +65,26 @@ export async function GET() {
       };
     });
 
+    logger.apiResponse(context.method, context.path, 200);
     return NextResponse.json({ companies });
   } catch (error) {
-    console.error('Error fetching companies:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch companies' },
-      { status: 500 }
-    );
+    return handleApiError(error, context);
   }
 }
 
 // POST /api/companies - Create a new company
 export async function POST(request: NextRequest) {
+  const context = { method: 'POST', path: '/api/companies' };
+
   try {
+    logger.apiRequest(context.method, context.path);
+
     const body = await request.json();
 
     // Validate input
     const validatedData = createCompanySchema.parse(body);
+
+    logger.info('Creating new company', { name: validatedData.name, tax_id: validatedData.tax_id });
 
     // Encrypt sensitive fields
     const pbTokenEncrypted = validatedData.pb_api_token
@@ -88,6 +98,7 @@ export async function POST(request: NextRequest) {
       : null;
 
     // Insert into database
+    logger.dbQuery('INSERT INTO companies');
     const result = await sql`
       INSERT INTO companies (
         name,
@@ -118,6 +129,9 @@ export async function POST(request: NextRequest) {
 
     const company = result.rows[0];
 
+    logger.info('Company created successfully', { companyId: company.id, name: company.name });
+    logger.apiResponse(context.method, context.path, 201);
+
     return NextResponse.json({
       message: 'Company created successfully',
       company: {
@@ -129,17 +143,6 @@ export async function POST(request: NextRequest) {
       },
     }, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    console.error('Error creating company:', error);
-    return NextResponse.json(
-      { error: 'Failed to create company' },
-      { status: 500 }
-    );
+    return handleApiError(error, context);
   }
 }

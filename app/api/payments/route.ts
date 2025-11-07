@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/api-error-handler';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -18,8 +20,10 @@ const getPaymentsSchema = z.object({
 
 // GET /api/payments - List payments with filtering
 export async function GET(request: NextRequest) {
+  const context = { method: 'GET', path: '/api/payments' };
+
   try {
-    console.log('[/api/payments] Request received');
+    logger.apiRequest(context.method, context.path);
     const { searchParams } = new URL(request.url);
 
     // Parse and validate query params
@@ -33,11 +37,8 @@ export async function GET(request: NextRequest) {
       offset: searchParams.get('offset') || undefined,
     };
 
-    console.log('[/api/payments] Raw params:', rawParams);
-
     const params = getPaymentsSchema.parse(rawParams);
-
-    console.log('[/api/payments] Validated params:', params);
+    logger.debug('Payments query params', params);
 
     const companyId = params.companyId ? parseInt(params.companyId) : null;
     const limit = parseInt(params.limit);
@@ -126,6 +127,7 @@ export async function GET(request: NextRequest) {
 
     queryParams.push(limit, offset);
 
+    logger.dbQuery('SELECT payments with filters');
     const paymentsResult = await sql.query(paymentsQuery, queryParams);
 
     // Calculate summary stats (use same where clause but rebuild params without limit/offset)
@@ -141,12 +143,11 @@ export async function GET(request: NextRequest) {
       ${whereClause}
     `;
 
-    console.log('Stats query:', statsQuery);
-    console.log('Stats params:', statsParams);
-
+    logger.dbQuery('SELECT payment stats');
     const statsResult = await sql.query(statsQuery, statsParams);
     const stats = statsResult.rows[0];
 
+    logger.apiResponse(context.method, context.path, 200);
     return NextResponse.json({
       payments: paymentsResult.rows,
       pagination: {
@@ -164,22 +165,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    console.error('Error fetching payments:', error);
-    console.error('Error stack:', (error as Error).stack);
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch payments',
-        message: (error as Error).message,
-        details: process.env.NODE_ENV === 'development' ? (error as Error).stack : undefined
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, context);
   }
 }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import AuthProvider from '@/components/AuthProvider'
 import { CompanyProvider } from '@/contexts/CompanyContext'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export const metadata: Metadata = {
   title: 'Система управління платежами',
@@ -19,11 +20,13 @@ export default function RootLayout({
         <meta charSet="utf-8" />
       </head>
       <body>
-        <AuthProvider>
-          <CompanyProvider>
-            {children}
-          </CompanyProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <CompanyProvider>
+              {children}
+            </CompanyProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

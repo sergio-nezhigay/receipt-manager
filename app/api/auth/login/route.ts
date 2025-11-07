@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 import { verifyPassword, createJWT } from '@/lib/auth';
+import { logger } from '@/lib/logger';
+import { errors, handleApiError } from '@/lib/api-error-handler';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -9,21 +11,18 @@ const loginSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const context = { method: 'POST', path: '/api/auth/login' };
+
   try {
+    logger.apiRequest(context.method, context.path);
+
     const body = await request.json();
 
     // Validate input
-    const validation = loginSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.issues },
-        { status: 400 }
-      );
-    }
-
-    const { email, password } = validation.data;
+    const { email, password } = loginSchema.parse(body);
 
     // Find user by email
+    logger.dbQuery('SELECT user by email', [email]);
     const result = await sql`
       SELECT id, email, password_hash, name
       FROM users
@@ -31,10 +30,8 @@ export async function POST(request: NextRequest) {
     `;
 
     if (result.rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      logger.warn('Login attempt with invalid email', { email });
+      throw errors.unauthorized('Invalid email or password');
     }
 
     const user = result.rows[0];
@@ -43,18 +40,16 @@ export async function POST(request: NextRequest) {
     const isValidPassword = await verifyPassword(password, user.password_hash);
 
     if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      logger.warn('Login attempt with invalid password', { email });
+      throw errors.unauthorized('Invalid email or password');
     }
 
     // Create JWT token
     const token = await createJWT(user.id);
 
-    console.log('User logged in successfully:', user.email);
+    logger.info('User logged in successfully', { userId: user.id, email: user.email });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       token,
       user: {
@@ -63,11 +58,10 @@ export async function POST(request: NextRequest) {
         name: user.name,
       },
     });
+
+    logger.apiResponse(context.method, context.path, 200);
+    return response;
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Failed to login' },
-      { status: 500 }
-    );
+    return handleApiError(error, context);
   }
 }

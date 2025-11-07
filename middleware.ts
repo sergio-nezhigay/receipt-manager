@@ -1,8 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyJWT, getTokenFromHeader } from '@/lib/jwt';
+import { checkRateLimit, rateLimitConfigs } from '@/lib/rate-limit';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Apply rate limiting to API routes
+  if (pathname.startsWith('/api/')) {
+    // Determine rate limit config based on endpoint
+    let rateLimitConfig = rateLimitConfigs.api;
+
+    if (pathname.startsWith('/api/auth/')) {
+      rateLimitConfig = rateLimitConfigs.auth;
+    } else if (pathname.startsWith('/api/integrations/')) {
+      rateLimitConfig = rateLimitConfigs.external;
+    } else if (request.method === 'GET') {
+      rateLimitConfig = rateLimitConfigs.read;
+    }
+
+    // Check rate limit
+    const rateLimitResult = checkRateLimit(request, rateLimitConfig);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: rateLimitConfig.message || 'Too many requests',
+          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimitResult.reset).toISOString(),
+            'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+          },
+        }
+      );
+    }
+  }
 
   // Allow public routes (auth endpoints, static files, Next.js internals)
   const publicRoutes = [

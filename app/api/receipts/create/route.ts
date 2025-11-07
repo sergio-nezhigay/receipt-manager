@@ -8,6 +8,8 @@ import {
   CheckboxCreateReceiptRequest,
 } from '@/lib/checkbox-client';
 import { getProductTitle, getProductCode } from '@/lib/product-title';
+import { logger } from '@/lib/logger';
+import { errors, handleApiError } from '@/lib/api-error-handler';
 
 // Validation schema for receipt creation
 const createReceiptSchema = z.object({
@@ -16,16 +18,20 @@ const createReceiptSchema = z.object({
 
 // POST /api/receipts/create
 export async function POST(request: NextRequest) {
+  const context = { method: 'POST', path: '/api/receipts/create' };
+
   try {
+    logger.apiRequest(context.method, context.path);
     const body = await request.json();
 
     // Validate input
     const validatedData = createReceiptSchema.parse(body);
     const { paymentId } = validatedData;
 
-    console.log(`Creating receipt for payment ${paymentId}`);
+    logger.info('Creating receipt for payment', { paymentId });
 
     // Fetch payment details
+    logger.dbQuery('SELECT payment with company details', [paymentId]);
     const paymentResult = await sql`
       SELECT
         p.id,
@@ -45,23 +51,16 @@ export async function POST(request: NextRequest) {
     `;
 
     if (paymentResult.rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Payment not found' },
-        { status: 404 }
-      );
+      logger.warn('Payment not found for receipt creation', { paymentId });
+      throw errors.notFound('Payment');
     }
 
     const payment = paymentResult.rows[0];
 
     // Check if receipt already issued
     if (payment.receipt_issued) {
-      return NextResponse.json(
-        {
-          error: 'Receipt already issued',
-          message: 'A receipt has already been created for this payment',
-        },
-        { status: 400 }
-      );
+      logger.warn('Attempted to create duplicate receipt', { paymentId });
+      throw errors.conflict('Receipt already issued for this payment');
     }
 
     // Check if Checkbox credentials are configured
@@ -70,13 +69,10 @@ export async function POST(request: NextRequest) {
       !payment.checkbox_cashier_login ||
       !payment.checkbox_cashier_pin_encrypted
     ) {
-      return NextResponse.json(
-        {
-          error: 'Checkbox credentials not configured',
-          message: 'Please add Checkbox credentials in company settings',
-        },
-        { status: 400 }
-      );
+      logger.error('Checkbox credentials not configured for company', { companyId: payment.company_id });
+      throw errors.badRequest('Checkbox credentials not configured', {
+        message: 'Please add Checkbox credentials in company settings',
+      });
     }
 
     // Decrypt credentials
@@ -123,11 +119,12 @@ export async function POST(request: NextRequest) {
       footer: 'Дякуємо за співпрацю!',
     };
 
-    console.log('Receipt data prepared:', JSON.stringify(receiptData, null, 2));
+    logger.debug('Receipt data prepared', { paymentId, amountInKopiyky });
 
     // Issue receipt via Checkbox API
     let checkboxReceipt;
     try {
+      logger.externalApiCall('Checkbox', 'Issue Receipt', { paymentId });
       checkboxReceipt = await checkboxIssueReceipt(
         cashierLogin,
         cashierPin,
@@ -135,20 +132,18 @@ export async function POST(request: NextRequest) {
         receiptData
       );
     } catch (apiError: any) {
-      console.error('Checkbox API error:', apiError);
-      return NextResponse.json(
-        {
-          error: 'Failed to create receipt in Checkbox',
-          message: apiError.message || 'API request failed',
-          details: 'Please check your Checkbox credentials and try again',
-        },
-        { status: 502 }
-      );
+      logger.externalApiError('Checkbox', apiError, { paymentId });
+      throw errors.serviceUnavailable('Checkbox');
     }
 
-    console.log('Checkbox receipt created:', checkboxReceipt.id);
+    logger.info('Checkbox receipt created successfully', {
+      paymentId,
+      checkboxReceiptId: checkboxReceipt.id,
+      fiscalCode: checkboxReceipt.fiscal_code
+    });
 
     // Store receipt in database
+    logger.dbQuery('INSERT receipt and UPDATE payment', [paymentId]);
     const receiptInsertResult = await sql`
       INSERT INTO receipts (
         company_id,
@@ -184,9 +179,10 @@ export async function POST(request: NextRequest) {
       WHERE id = ${paymentId}
     `;
 
-    console.log(`Receipt saved to database: ID ${receiptId}`);
+    logger.info('Receipt saved to database', { receiptId, paymentId });
 
     // Return success response
+    logger.apiResponse(context.method, context.path, 200);
     return NextResponse.json({
       success: true,
       message: 'Receipt created successfully',
@@ -207,17 +203,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    console.error('Error in receipt creation route:', error);
-    return NextResponse.json(
-      { error: 'Failed to create receipt', message: (error as Error).message },
-      { status: 500 }
-    );
+    return handleApiError(error, context);
   }
 }
