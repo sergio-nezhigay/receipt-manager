@@ -101,53 +101,92 @@ export async function fetchPrivatBankPayments(
   console.log(`Fetching PrivatBank payments from ${startDateStr} to ${endDateStr}`);
 
   try {
-    // Build request URL with startDate query param
-    const url = `${PRIVATBANK_API_BASE_URL}/statements/transactions?startDate=${startDateStr}`;
+    // Fetch all pages of transactions
+    let allTransactions: PrivatBankTransaction[] = [];
+    let currentPageId: string | undefined = undefined;
+    let pageNumber = 1;
+    let hasMorePages = true;
 
-    console.log('PrivatBank API request:', { url, merchantId, startDate: startDateStr, endDate: endDateStr });
+    console.log(`Starting to fetch PrivatBank payments from ${startDateStr} to ${endDateStr}`);
 
-    // Use GET method with authentication and params in headers
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Id': merchantId,
-        'Token': token,
-        'startDate': startDateStr,
-        'endDate': endDateStr,
-        'limit': '100',
-        'Accept': 'application/json',
-        'Accept-Charset': 'utf-8',
-      },
-    });
+    // Loop through all pages
+    while (hasMorePages) {
+      // Build request URL with pagination support
+      let url = `${PRIVATBANK_API_BASE_URL}/statements/transactions?startDate=${startDateStr}&endDate=${endDateStr}`;
 
-    if (!response.ok) {
-      const errorBuffer = await response.arrayBuffer();
-      const errorText = iconv.decode(Buffer.from(errorBuffer), 'win1251');
-      console.error('PrivatBank API error:', response.status, errorText);
-      throw new Error(`PrivatBank API error: ${response.status} ${response.statusText}`);
+      // Add page_id for subsequent pages
+      if (currentPageId) {
+        url += `&followId=${currentPageId}`;
+      }
+
+      console.log(`Fetching page ${pageNumber}${currentPageId ? ` (followId: ${currentPageId})` : ''}`);
+      console.log(`Request URL: ${url}`);
+
+      // Use GET method with authentication and params in headers
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Id': merchantId,
+          'Token': token,
+          'startDate': startDateStr,
+          'endDate': endDateStr,
+          'limit': '500', // Increased limit to fetch more transactions per page
+          'Accept': 'application/json',
+          'Accept-Charset': 'utf-8',
+        },
+      });
+
+      if (!response.ok) {
+        const errorBuffer = await response.arrayBuffer();
+        const errorText = iconv.decode(Buffer.from(errorBuffer), 'win1251');
+        console.error('PrivatBank API error:', response.status, errorText);
+        throw new Error(`PrivatBank API error: ${response.status} ${response.statusText}`);
+      }
+
+      // PrivatBank returns data in Windows-1251 encoding, we need to convert it to UTF-8
+      const buffer = await response.arrayBuffer();
+      const decodedText = iconv.decode(Buffer.from(buffer), 'win1251');
+
+      if (pageNumber === 1) {
+        console.log('Decoded response (first 500 chars):', decodedText.substring(0, 500));
+      }
+
+      const data: PrivatBankStatementResponse = JSON.parse(decodedText);
+
+      console.log(`Page ${pageNumber} - Status: ${data.status}, Transactions: ${data.transactions?.length || 0}, Has next page: ${data.exist_next_page}`);
+
+      if (data.status !== 'SUCCESS') {
+        throw new Error(`PrivatBank API returned status: ${data.status}`);
+      }
+
+      // Add transactions from current page
+      if (data.transactions && data.transactions.length > 0) {
+        allTransactions = allTransactions.concat(data.transactions);
+      }
+
+      // Check if there are more pages
+      if (data.exist_next_page && data.next_page_id) {
+        currentPageId = data.next_page_id;
+        pageNumber++;
+      } else {
+        hasMorePages = false;
+      }
+
+      // Safety limit: max 100 pages to prevent infinite loops
+      if (pageNumber > 100) {
+        console.warn('Reached maximum page limit (100). Stopping pagination.');
+        hasMorePages = false;
+      }
     }
 
-    // PrivatBank returns data in Windows-1251 encoding, we need to convert it to UTF-8
-    const buffer = await response.arrayBuffer();
-    const decodedText = iconv.decode(Buffer.from(buffer), 'win1251');
-
-    console.log('Decoded response (first 500 chars):', decodedText.substring(0, 500));
-
-    const data: PrivatBankStatementResponse = JSON.parse(decodedText);
-
-    console.log(`PrivatBank API response status: ${data.status}`);
-    console.log(`PrivatBank API response: ${data.transactions?.length || 0} transactions`);
-
-    if (data.status !== 'SUCCESS') {
-      throw new Error(`PrivatBank API returned status: ${data.status}`);
-    }
+    console.log(`Fetched ${pageNumber} page(s) with total ${allTransactions.length} transactions`);
 
     // Filter for incoming payments only (TRANTYPE = 'C' for Credit)
-    const incomingPayments = (data.transactions || []).filter(
+    const incomingPayments = allTransactions.filter(
       (tx) => tx.TRANTYPE === 'C' && parseFloat(tx.SUM_E || '0') > 0
     );
 
-    console.log(`Filtered ${incomingPayments.length} incoming payments`);
+    console.log(`Filtered ${incomingPayments.length} incoming payments from ${allTransactions.length} total transactions`);
 
     return incomingPayments;
   } catch (error) {

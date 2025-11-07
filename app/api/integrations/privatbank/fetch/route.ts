@@ -65,7 +65,8 @@ export async function POST(request: NextRequest) {
       ? new Date(startDate)
       : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    console.log(`Date range: ${start.toISOString()} to ${end.toISOString()}`);
+    console.log(`Fetching payments for date range: ${start.toLocaleDateString('uk-UA')} to ${end.toLocaleDateString('uk-UA')}`);
+    console.log(`Date range (ISO): ${start.toISOString()} to ${end.toISOString()}`);
 
     // Fetch payments from PrivatBank
     let transactions;
