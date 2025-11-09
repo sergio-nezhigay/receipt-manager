@@ -36,7 +36,10 @@
       "Bash(npm run dev:*)",
       "Bash(taskkill:*)",
       "Bash(node -e:*)",
-      "Bash(vercel env add:*)"
+      "Bash(vercel env add:*)",
+      "Bash(vercel project --help:*)",
+      "Bash(vercel project:*)",
+      "Bash(vercel whoami:*)"
     ],
     "deny": [],
     "ask": []
