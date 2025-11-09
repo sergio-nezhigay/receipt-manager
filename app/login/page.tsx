@@ -87,17 +87,6 @@ export default function LoginPage() {
             {loading ? 'Вхід...' : 'Увійти'}
           </button>
         </form>
-
-        <div className="help-text">
-          <p>
-            <strong>Для першого входу:</strong> створіть користувача через API
-          </p>
-          <code>
-            POST /api/auth/register
-            <br />
-            {`{ "email": "admin@test.com", "password": "test123", "name": "Admin" }`}
-          </code>
-        </div>
       </div>
 
       <style jsx>{`
@@ -197,28 +186,6 @@ export default function LoginPage() {
           border-radius: 6px;
           margin-bottom: 20px;
           font-size: 14px;
-        }
-
-        .help-text {
-          margin-top: 30px;
-          padding-top: 20px;
-          border-top: 1px solid #e0e0e0;
-          font-size: 13px;
-          color: #666;
-        }
-
-        .help-text p {
-          margin: 0 0 10px 0;
-        }
-
-        .help-text code {
-          display: block;
-          background: #f5f5f5;
-          padding: 10px;
-          border-radius: 4px;
-          font-size: 12px;
-          overflow-x: auto;
-          margin-top: 8px;
         }
 
         @media (max-width: 768px) {

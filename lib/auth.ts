@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { createJWT } from './jwt';
 
 const SALT_ROUNDS = 10;
