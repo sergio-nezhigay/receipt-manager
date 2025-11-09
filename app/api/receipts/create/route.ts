@@ -76,8 +76,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Decrypt credentials
-    const licenseKey = decrypt(payment.checkbox_license_key_encrypted);
-    const cashierPin = decrypt(payment.checkbox_cashier_pin_encrypted);
+    let licenseKey: string;
+    let cashierPin: string;
+    try {
+      licenseKey = decrypt(payment.checkbox_license_key_encrypted);
+      cashierPin = decrypt(payment.checkbox_cashier_pin_encrypted);
+    } catch (decryptError) {
+      logger.error('Failed to decrypt Checkbox credentials', {
+        companyId: payment.company_id,
+        error: decryptError,
+      });
+      throw errors.badRequest('Failed to decrypt Checkbox credentials', {
+        message: 'The stored credentials could not be decrypted. Please re-enter your Checkbox credentials in company settings.',
+        details: 'This may happen if the encryption key has changed.',
+      });
+    }
     const cashierLogin = payment.checkbox_cashier_login;
 
     // Convert amount to kopiyky (Checkbox uses kopiyky for amounts)

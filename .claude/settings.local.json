@@ -41,7 +41,11 @@
       "Bash(vercel project:*)",
       "Bash(vercel whoami:*)",
       "Bash(vercel env rm:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(vercel env:*)",
+      "Bash(timeout /t 30)"
     ],
     "deny": [],
     "ask": []

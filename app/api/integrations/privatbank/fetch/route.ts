@@ -58,7 +58,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Decrypt API token
-    const apiToken = decrypt(company.pb_api_token_encrypted);
+    let apiToken: string;
+    try {
+      apiToken = decrypt(company.pb_api_token_encrypted);
+    } catch (decryptError) {
+      console.error(`Decryption failed for company ${companyId}:`, decryptError);
+      return NextResponse.json(
+        {
+          error: 'Failed to decrypt PrivatBank API token',
+          message: 'The stored API token could not be decrypted. Please re-enter your PrivatBank credentials in company settings.',
+          details: 'This may happen if the encryption key has changed.',
+        },
+        { status: 400 }
+      );
+    }
 
     // Set date range (default to last 30 days if not provided)
     const end = endDate ? new Date(endDate) : new Date();

@@ -9,7 +9,8 @@
     "init-db": "tsx scripts/init-db.ts",
     "verify-step1": "tsx scripts/verify-step1.ts",
     "cleanup-companies": "tsx scripts/cleanup-companies.ts",
-    "migrate-payments": "tsx scripts/add-payment-fields.ts"
+    "migrate-payments": "tsx scripts/add-payment-fields.ts",
+    "migrate-encryption": "tsx scripts/migrate-encryption-key.ts"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
