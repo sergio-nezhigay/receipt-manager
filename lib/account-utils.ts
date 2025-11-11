@@ -7,7 +7,8 @@
  * Patterns that indicate non-target payments (receipts not needed)
  * These patterns appear at positions 15-18 in Ukrainian IBAN format
  */
-const NON_TARGET_PATTERNS = ['2600', '2902', '2909', '2920'];
+const NON_TARGET_PATTERNS = ['2600', '2902', '2909', '2920', '2620', '2654'];
+const NOVA_POSHTA_ACCOUNT = 'UA813005280000026548000000014';
 
 /**
  * Check if a payment is a target for receipt issuance
@@ -20,19 +21,20 @@ const NON_TARGET_PATTERNS = ['2600', '2902', '2909', '2920'];
  * isTargetAccount('UA843052990000026001031613189') // false (has '2600' at 15-18)
  * isTargetAccount('UA783220010000012345678901234') // true (no restricted pattern)
  */
-export function isTargetAccount(senderAccount: string | null | undefined): boolean {
-  // If no sender account, consider it non-target for safety
+export function isTargetAccount(
+  senderAccount: string | null | undefined
+): boolean {
   if (!senderAccount || senderAccount.length < 19) {
     return false;
   }
 
-  // Extract characters at positions 15-18 (0-indexed)
-  const patternSection = senderAccount.substring(15, 19);
+  if (senderAccount === NOVA_POSHTA_ACCOUNT) {
+    return false;
+  }
 
-  // Check if this section matches any non-target patterns
+  const patternSection = senderAccount.substring(15, 19);
   const isNonTarget = NON_TARGET_PATTERNS.includes(patternSection);
 
-  // Return opposite: if it's NOT a non-target pattern, then it IS a target
   return !isNonTarget;
 }
 
@@ -53,13 +55,13 @@ export function getTargetLabel(senderAccount: string | null | undefined): {
     return {
       text: 'Потребує чек',
       emoji: '🎯',
-      needsReceipt: true
+      needsReceipt: true,
     };
   } else {
     return {
       text: 'Не потребує чека',
       emoji: 'ℹ️',
-      needsReceipt: false
+      needsReceipt: false,
     };
   }
 }
@@ -70,7 +72,9 @@ export function getTargetLabel(senderAccount: string | null | undefined): {
  * @param senderAccount - The sender's account number
  * @returns Pattern parts for visual highlighting
  */
-export function getAccountPatternParts(senderAccount: string | null | undefined): {
+export function getAccountPatternParts(
+  senderAccount: string | null | undefined
+): {
   prefix: string;
   pattern: string;
   suffix: string;
@@ -89,6 +93,6 @@ export function getAccountPatternParts(senderAccount: string | null | undefined)
     prefix,
     pattern,
     suffix,
-    isMatched
+    isMatched,
   };
 }
